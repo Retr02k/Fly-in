@@ -24,16 +24,34 @@ class MapParser(BaseModel):
                 key, _, value = line.partition(":")
                 key = key.strip()
                 value = value.strip()
+                match key:
+                    case "start_hub" | "end_hub":
+                        endpoint_hub = self._parse_endpoint_hub(value)
+                    case "start_hub" | "end_hub" | "hub":
+                        hub = self._parse_hub_line(value)
+                        self.hub_list.append(hub)
+                    case "connection":
+                        connection = self._parse_connection_line(value)
+
                 new_dict[key] = value
 
         self.drone_number = new_dict.get("nb_drones", 0)
-        print(new_dict)
+        #print(new_dict)
+        #print(f'\n\n=== Start Hub ===\n{new_dict.get("start_hub")}\n')
+        #print(f'=== End Hub ===\n{new_dict.get("end_hub")}\n')
+        #print(f'=== Hub ===\n{new_dict.get("hub")}')
 
-    def _parse_hub_lines(self, value: str) -> Hub:
+
+    def _parse_hub_line(self, value: str) -> Hub:
         pass
 
     def _parse_connection_line(self, value: str) -> Connection:
         pass
+
+    def _parse_endpoint_hub(self, value: str) -> Hub:
+        print(value)
+        name, x, y, zone_type, color, max_drone = value.split()
+        gabriel = Hub(name=name, x=x, y=y)
 
 
 try:
