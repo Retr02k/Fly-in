@@ -12,6 +12,15 @@ run:
 	@echo "Running app..."
 	uv run fly-in
 
+test:
+	uv run pytest -v
+
+test-fast:
+	uv run pytest -x
+
+coverage:
+	uv run pytest --cov=src/fly_in --cov-report=term-missing
+
 debug:
 	uv run python -m pdb fly-in
 
