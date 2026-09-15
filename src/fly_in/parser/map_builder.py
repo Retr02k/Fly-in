@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
-from model.connection import Connection
-from model.hub import Hub
-from model.map import Map
+from fly_in.model.connection import Connection
+from fly_in.model.hub import Hub
+from fly_in.model.map import Map
 
 @dataclass
 class MapBuilder:

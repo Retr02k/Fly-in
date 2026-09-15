@@ -1,4 +1,4 @@
-from header.header import ZoneType
+from fly_in.header.header import ZoneType
 from pydantic import BaseModel, Field
 
 

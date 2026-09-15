@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from model.hub import Hub
+from fly_in.model.hub import Hub
 
 
 class Connection(BaseModel):
-    hub1: str
-    hub2: str
+    from_hub: str
+    to_hub: str
     max_link_capacity: int = 1

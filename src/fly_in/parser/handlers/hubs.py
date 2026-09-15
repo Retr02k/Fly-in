@@ -1,7 +1,7 @@
 import re
-from parser.map_parser import register
-from parser.map_builder import MapBuilder
-from model.hub import Hub
+from fly_in.parser.map_parser import register
+from fly_in.parser.map_builder import MapBuilder
+from fly_in.model.hub import Hub
 
 
 def _parse_hub_fields(value: str) -> Hub:

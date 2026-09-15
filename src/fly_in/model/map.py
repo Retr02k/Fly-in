@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from model.hub import Hub
-from model.connection import Connection
+from fly_in.model.hub import Hub
+from fly_in.model.connection import Connection
 
 
 class Map(BaseModel):

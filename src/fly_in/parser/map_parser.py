@@ -1,7 +1,7 @@
 from typing import Callable
 from pydantic import BaseModel
-from model.map import Map
-from parser.map_builder import MapBuilder
+from fly_in.model.map import Map
+from fly_in.parser.map_builder import MapBuilder
 
 
 HANDLERS: dict[str, Callable[[MapBuilder, str], None]] = {}
@@ -17,7 +17,7 @@ class MapParser(BaseModel):
     filepath: str
 
     def parse(self) -> Map:
-        from parser import handlers  # noqa: F401 — triggers registration
+        from fly_in.parser import handlers  # noqa: F401 — triggers registration
 
         builder = MapBuilder()
 
@@ -36,10 +36,9 @@ class MapParser(BaseModel):
                 handler(builder, value)
 
         return builder.build()
-
-
-try:
-    parser = MapParser(filepath="src/maps/easy/01_linear_path.txt")
-    drone_map = parser.parse()
-except Exception as error:
-    print(error)
+if __name__ == "__main__":
+    try:
+        parser = MapParser(filepath="src/maps/easy/01_linear_path.txt")
+        drone_map = parser.parse()
+    except Exception as error:
+        print(error)
