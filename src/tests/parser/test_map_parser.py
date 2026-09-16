@@ -1,25 +1,32 @@
 import pytest
+import runpy
 from fly_in.parser.map_parser import MapParser
 
 
-def test_parse_full_map(map_file):
-    parser = MapParser(filepath=map_file)
+def test_parse_full_map(path_to_map_file, path_to_expected_output_file):
+    expected = runpy.run_path(path_to_expected_output_file)["EXPECTED_MAP"]
+    parser = MapParser(filepath=path_to_map_file)
     result = parser.parse()
 
-    assert result.nb_drones == 4
-    assert set(result.hubs.keys()) == {"start", "bottleneck", "wide_area", "goal"}
-    assert result.start_hub == "start"
-    assert result.end_hub == "goal"
-    assert len(result.connections) == 3
-    assert result.hubs["start"].color == "green"
-    assert result.hubs["bottleneck"].color == "orange"
-    assert result.hubs["bottleneck"].max_drones == 2
-    assert result.hubs["wide_area"].color == "blue"
-    assert result.hubs["wide_area"].max_drones == 3
-    assert result.hubs["goal"].color == "red"
+    assert result.nb_drones == expected["nb_drones"]
+    assert result.start_hub == expected["start_hub"]
+    assert result.end_hub == expected["end_hub"]
+    assert set(result.hubs) == set(expected["hubs"])
+    assert len(result.connections) == len(expected["connections"])
 
-def test_parse_ignores_comments_and_blank_lines(map_file):
-    parser = MapParser(filepath=map_file)
+    for hub_name, expected_hub in expected["hubs"].items():
+        assert result.hubs[hub_name].model_dump() == expected_hub
+
+    for connection, expected_connection in zip(
+        result.connections,
+        expected["connections"],
+        strict=True,
+    ):
+        assert connection.model_dump() == expected_connection
+
+
+def test_parse_ignores_comments_and_blank_lines(path_to_map_file):
+    parser = MapParser(filepath=path_to_map_file)
     result = parser.parse()
     assert result is not None
 

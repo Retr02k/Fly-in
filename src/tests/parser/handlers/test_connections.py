@@ -1,3 +1,4 @@
+from fly_in.parser.handlers import connections
 from fly_in.parser.map_builder import MapBuilder
 from fly_in.parser.handlers.connections import handle_connection
 
@@ -14,3 +15,9 @@ def test_handle_connection_appends_multiple():
     handle_connection(builder, "a-b")
     handle_connection(builder, "b-c")
     assert len(builder.connections) == 2
+
+
+def test_handle_connection_parses_max_link_capacity():
+    builder = MapBuilder()
+    handle_connection(builder, "a-b [max_link_capacity=2]")
+    assert builder.connections[0].max_link_capacity == 2
