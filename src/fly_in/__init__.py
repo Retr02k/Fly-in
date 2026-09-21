@@ -1,8 +1,6 @@
 from fly_in.parser import MapParser
 from fly_in.simulation import Simulator
 
-__all__ = ["MapParser", "Simulator"]
-
 
 def main() -> None:
     parsed_map = MapParser(
