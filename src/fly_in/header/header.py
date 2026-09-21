@@ -6,10 +6,3 @@ class ZoneType(str, Enum):
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
-
-
-class DroneStatus(int, Enum):
-    WAITING = 0
-    MOVING = 1
-    DELIVERED = 2
-
