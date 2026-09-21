@@ -3,7 +3,7 @@ import pytest
 from fly_in.model.drone import Drone, DroneStatus
 
 
-def test_drone_starts_at_the_beginning_of_its_route():
+def test_drone_starts_at_the_beginning_of_its_route() -> None:
     drone = Drone(
         drone_id=1,
         current_hub="start",
@@ -14,7 +14,7 @@ def test_drone_starts_at_the_beginning_of_its_route():
     assert drone.status == DroneStatus.WAITING
 
 
-def test_drone_requires_a_positive_id():
+def test_drone_requires_a_positive_id() -> None:
     with pytest.raises(ValueError):
         Drone(
             drone_id=0,

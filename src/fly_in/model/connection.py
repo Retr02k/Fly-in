@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from fly_in.model.hub import Hub
 
 
 class Connection(BaseModel):

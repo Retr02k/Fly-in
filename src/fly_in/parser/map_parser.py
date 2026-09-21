@@ -6,10 +6,15 @@ from fly_in.parser.map_builder import MapBuilder
 
 HANDLERS: dict[str, Callable[[MapBuilder, str], None]] = {}
 
-def register(key: str):
-    def decorator(fn):
+
+Handler = Callable[[MapBuilder, str], None]
+
+
+def register(key: str) -> Callable[[Handler], Handler]:
+    def decorator(fn: Handler) -> Handler:
         HANDLERS[key] = fn
         return fn
+
     return decorator
 
 
@@ -17,7 +22,7 @@ class MapParser(BaseModel):
     filepath: str
 
     def parse(self) -> Map:
-        from fly_in.parser import handlers  # noqa: F401 — triggers registration
+        from fly_in.parser import handlers  # noqa: F401
 
         builder = MapBuilder()
 

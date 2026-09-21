@@ -23,7 +23,7 @@ def make_map(connections: list[Connection]) -> Map:
     )
 
 
-def test_connectors_dic_keeps_all_bidirectional_neighbors():
+def test_connectors_dic_keeps_all_bidirectional_neighbors() -> None:
     drone_map = make_map(
         [
             Connection(
@@ -47,7 +47,7 @@ def test_connectors_dic_keeps_all_bidirectional_neighbors():
     }
 
 
-def test_connectors_dic_rejects_unknown_hubs():
+def test_connectors_dic_rejects_unknown_hubs() -> None:
     drone_map = make_map(
         [Connection(from_hub="start", to_hub="missing")]
     )

@@ -64,6 +64,8 @@ class Simulator:
 
     def run(self) -> list[list[tuple[int, str, str]]]:
         turns: list[list[tuple[int, str, str]]] = []
-        while any(drone.status != DroneStatus.DELIVERED for drone in self.drones):
+        while any(
+            drone.status != DroneStatus.DELIVERED for drone in self.drones
+        ):
             turns.append(self.step())
         return turns

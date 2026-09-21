@@ -3,6 +3,7 @@ from fly_in.model.connection import Connection
 from fly_in.model.hub import Hub
 from fly_in.model.map import Map
 
+
 @dataclass
 class MapBuilder:
     nb_drones: int = 0

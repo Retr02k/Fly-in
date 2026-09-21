@@ -18,14 +18,21 @@ class GraphBuilder:
                     f"Connection references unknown hub(s): {missing}"
                 )
 
-    def hub_matrix(self):
+    def hub_matrix(self) -> list[list[int]]:
         nb_vertices = len(self.drone_map.hubs)
         matrix = [[0] * nb_vertices for _ in range(nb_vertices)]
-        min_x, max_x = min(self.drone_map.hubs[hub_name].x for hub_name in self.drone_map.hubs.keys()), max(self.drone_map.hubs[hub_name].x for hub_name in self.drone_map.hubs.keys())
-        min_y, max_y = min(self.drone_map.hubs[hub_name].y for hub_name in self.drone_map.hubs.keys()), max(self.drone_map.hubs[hub_name].y for hub_name in self.drone_map.hubs.keys())
+        min_x = min(
+            self.drone_map.hubs[hub_name].x
+            for hub_name in self.drone_map.hubs
+        )
+        min_y = min(
+            self.drone_map.hubs[hub_name].y
+            for hub_name in self.drone_map.hubs
+        )
 
-        for hub_name in self.drone_map.hubs.keys():
-            hub_x, hub_y = self.drone_map.hubs[hub_name].x, self.drone_map.hubs[hub_name].y
+        for hub_name in self.drone_map.hubs:
+            hub_x = self.drone_map.hubs[hub_name].x
+            hub_y = self.drone_map.hubs[hub_name].y
             normalized_hub_x, normalized_hub_y = hub_x - min_x, hub_y - min_y
             matrix[normalized_hub_x][normalized_hub_y] = 1
         return matrix
