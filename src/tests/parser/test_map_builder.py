@@ -2,7 +2,7 @@ from fly_in.parser.map_builder import MapBuilder
 from fly_in.model.hub import Hub
 
 
-def test_map_builder_defaults():
+def test_map_builder_defaults() -> None:
     builder = MapBuilder()
     assert builder.nb_drones == 0
     assert builder.hubs == {}
@@ -11,7 +11,7 @@ def test_map_builder_defaults():
     assert builder.end_hub == ""
 
 
-def test_map_builder_build_produces_valid_map():
+def test_map_builder_build_produces_valid_map() -> None:
     builder = MapBuilder()
     builder.nb_drones = 2
     builder.hubs = {"start": Hub(name="start"), "goal": Hub(name="goal")}

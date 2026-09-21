@@ -2,7 +2,7 @@ from fly_in.parser.map_parser import MapParser
 from fly_in.simulation.simulation import Simulator
 
 
-def test_simulator_creates_one_drone_per_map_count():
+def test_simulator_creates_one_drone_per_map_count() -> None:
     drone_map = MapParser(
         filepath="src/maps/easy/01_linear_path.txt"
     ).parse()
@@ -20,7 +20,7 @@ def test_simulator_creates_one_drone_per_map_count():
     )
 
 
-def test_simulator_moves_all_drones_to_goal():
+def test_simulator_moves_all_drones_to_goal() -> None:
     drone_map = MapParser(
         filepath="src/maps/easy/01_linear_path.txt"
     ).parse()

@@ -1,9 +1,13 @@
 import pytest
 import runpy
+from pathlib import Path
 from fly_in.parser.map_parser import MapParser
 
 
-def test_parse_full_map(path_to_map_file, path_to_expected_output_file):
+def test_parse_full_map(
+    path_to_map_file: str,
+    path_to_expected_output_file: str,
+) -> None:
     expected = runpy.run_path(path_to_expected_output_file)["EXPECTED_MAP"]
     parser = MapParser(filepath=path_to_map_file)
     result = parser.parse()
@@ -25,13 +29,15 @@ def test_parse_full_map(path_to_map_file, path_to_expected_output_file):
         assert connection.model_dump() == expected_connection
 
 
-def test_parse_ignores_comments_and_blank_lines(path_to_map_file):
+def test_parse_ignores_comments_and_blank_lines(
+    path_to_map_file: str,
+) -> None:
     parser = MapParser(filepath=path_to_map_file)
     result = parser.parse()
     assert result is not None
 
 
-def test_parse_raises_on_unknown_directive(tmp_path):
+def test_parse_raises_on_unknown_directive(tmp_path: Path) -> None:
     bad_path = tmp_path / "bad.map"
     bad_path.write_text("mystery_field: something\n")
     parser = MapParser(filepath=str(bad_path))

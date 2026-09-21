@@ -18,8 +18,8 @@ def make_traversal() -> GraphTraversal:
     return GraphTraversal(drone_map)
 
 
-def test_bfs_returns_a_shortest_path():
-    connections = {
+def test_bfs_returns_a_shortest_path() -> None:
+    connections: dict[str, dict[str, int]] = {
         "start": {"junction": 1},
         "junction": {"start": 1, "path_a": 1, "path_b": 1},
         "path_a": {"junction": 1, "goal": 1},
@@ -35,8 +35,8 @@ def test_bfs_returns_a_shortest_path():
     )
 
 
-def test_bfs_handles_cycles():
-    connections = {
+def test_bfs_handles_cycles() -> None:
+    connections: dict[str, dict[str, int]] = {
         "start": {"loop": 1},
         "loop": {"start": 1, "goal": 1},
         "goal": {"loop": 1},
@@ -49,8 +49,8 @@ def test_bfs_handles_cycles():
     ]
 
 
-def test_bfs_returns_none_when_goal_is_unreachable():
-    connections = {
+def test_bfs_returns_none_when_goal_is_unreachable() -> None:
+    connections: dict[str, dict[str, int]] = {
         "start": {"junction": 1},
         "junction": {"start": 1},
         "goal": {},
@@ -59,7 +59,7 @@ def test_bfs_returns_none_when_goal_is_unreachable():
     assert make_traversal().bfs(connections, "start", "goal") is None
 
 
-def test_bfs_returns_start_when_start_is_goal():
-    connections = {"start": {}}
+def test_bfs_returns_start_when_start_is_goal() -> None:
+    connections: dict[str, dict[str, int]] = {"start": {}}
 
     assert make_traversal().bfs(connections, "start", "start") == ["start"]

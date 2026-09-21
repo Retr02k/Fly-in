@@ -1,1 +1,1 @@
-from . import hubs, connections, drones
+from . import hubs, connections, drones  # noqa: F401

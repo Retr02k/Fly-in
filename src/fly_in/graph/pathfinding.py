@@ -36,7 +36,8 @@ class GraphTraversal:
     @staticmethod
     def _build_path(
         previous: dict[str, str | None],
-        goal: str,) -> list[str]:
+        goal: str,
+    ) -> list[str]:
         path: list[str] = []
         current: str | None = goal
 

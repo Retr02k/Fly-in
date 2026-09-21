@@ -5,7 +5,7 @@ from fly_in.model.hub import Hub
 from fly_in.model.connection import Connection
 
 
-def test_map_creates_with_valid_data():
+def test_map_creates_with_valid_data() -> None:
     hubs = {"start": Hub(name="start"), "goal": Hub(name="goal")}
     connections = [Connection(from_hub="start", to_hub="goal")]
 
@@ -21,6 +21,13 @@ def test_map_creates_with_valid_data():
     assert len(m.connections) == 1
 
 
-def test_map_requires_nb_drones():
+def test_map_requires_nb_drones() -> None:
     with pytest.raises(ValidationError):
-        Map(hubs={}, connections=[], start_hub="a", end_hub="b")
+        Map.model_validate(
+            {
+                "hubs": {},
+                "connections": [],
+                "start_hub": "a",
+                "end_hub": "b",
+            }
+        )

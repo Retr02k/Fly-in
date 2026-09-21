@@ -11,7 +11,7 @@ EXPECTED_MAP = {
             "color": "green",
             "max_drones": 1,
         },
-        "junction" : {
+        "junction": {
             "name": "junction",
             "x": 1,
             "y": 0,
