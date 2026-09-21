@@ -36,6 +36,8 @@ class MapParser(BaseModel):
                 handler(builder, value)
 
         return builder.build()
+
+
 if __name__ == "__main__":
     try:
         parser = MapParser(filepath="src/maps/easy/01_linear_path.txt")
