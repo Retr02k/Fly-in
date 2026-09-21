@@ -40,6 +40,32 @@ class Simulator:
             for drone_id in range(1, self.parsed_map.nb_drones + 1)
         ]
 
+    def _current_hub_occupancy(self, destination_hub: str) -> bool:
+        capacity = self.parsed_map.hubs[destination_hub].max_drones
+        occupied = sum(
+                drone.current_hub == destination_hub
+                for drone in self.drones
+                )
+        return occupied < capacity
+
+        for drone in self.drones:
+            if drone.current_hub == destination_hub:
+                occupied += 1
+
+    def _allowed_drones_to_move(self) -> list[Drone]:
+        allowed = []
+
+        for drone in self.drones:
+            if drone.status == DroneStatus.DELIVERED:
+                continue
+
+        next_hub = drone.route[drone.current_route_index + 1]
+
+        if self._current_hub_occupancy(next_hub):
+            allowed.append(drone)
+
+        return allowed
+
     def step(self) -> list[tuple[int, str, str]]:
         movements: list[tuple[int, str, str]] = []
 

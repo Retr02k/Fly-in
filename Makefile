@@ -9,8 +9,8 @@ install:
 	uv sync
 
 run:
-	@echo "Running app..."
-	uv run fly-in
+	@echo "Running app...\n"
+	@uv run fly-in
 
 test:
 	uv run pytest -v
