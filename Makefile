@@ -12,6 +12,9 @@ run:
 	@echo "Running app..."
 	uv run fly-in
 
+gabriel:
+	@uv run src/fly_in/__test__.py
+
 test:
 	uv run pytest -v
 

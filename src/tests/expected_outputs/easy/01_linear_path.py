@@ -9,7 +9,7 @@ EXPECTED_MAP = {
             "y": 0,
             "zone_type": "normal",
             "color": "green",
-            "max_drones": 5,
+            "max_drones": 1,
         },
         "waypoint1": {
             "name": "waypoint1",

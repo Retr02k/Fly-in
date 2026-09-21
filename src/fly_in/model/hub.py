@@ -9,5 +9,3 @@ class Hub(BaseModel):
     zone_type: ZoneType = ZoneType.NORMAL
     color: str | None = None
     max_drones: int = 1
-
-
