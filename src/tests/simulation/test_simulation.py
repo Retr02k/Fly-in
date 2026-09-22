@@ -28,9 +28,39 @@ def test_simulator_moves_all_drones_to_goal() -> None:
     simulator = Simulator(drone_map)
     turns = simulator.run()
 
-    assert len(turns) == 3
-    assert simulator.current_turn == 3
+    assert len(turns) == 4
+    assert simulator.current_turn == 4
     assert all(
         drone.current_hub == drone_map.end_hub
         for drone in simulator.drones
     )
+
+
+def test_simulator_respects_hub_capacity() -> None:
+    drone_map = MapParser(
+        filepath="src/maps/easy/03_basic_capacity.txt"
+    ).parse()
+
+    simulator = Simulator(drone_map)
+    first_turn = simulator.step()
+
+    assert len(first_turn) == 2
+    assert sum(
+        drone.current_hub == "bottleneck" for drone in simulator.drones
+    ) == 2
+
+
+def test_simulator_respects_link_capacity() -> None:
+    drone_map = MapParser(
+        filepath="src/maps/medium/03_priority_puzzle.txt"
+    ).parse()
+
+    simulator = Simulator(drone_map)
+    simulator.step()
+    simulator.step()
+    third_turn = simulator.step()
+
+    assert sum(
+        destination == "goal"
+        for _, _, destination in third_turn
+    ) <= 2
