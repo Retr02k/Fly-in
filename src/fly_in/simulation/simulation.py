@@ -12,15 +12,16 @@ class Simulator:
         self.drones = self._create_drones()
         self.current_turn = 0
 
-    def _find_route(self) -> list[str]:
+    def _find_route(self, start: str | None = None) -> list[str]:
+        route_start = start or self.parsed_map.start_hub
         route = GraphTraversal(self.parsed_map).bfs(
             self.connections,
-            self.parsed_map.start_hub,
+            route_start,
             self.parsed_map.end_hub,
         )
         if route is None:
             raise ValueError(
-                f"No route from {self.parsed_map.start_hub!r} "
+                f"No route from {route_start!r} "
                 f"to {self.parsed_map.end_hub!r}"
             )
         return route
@@ -43,39 +44,59 @@ class Simulator:
     def _current_hub_occupancy(self, destination_hub: str) -> bool:
         capacity = self.parsed_map.hubs[destination_hub].max_drones
         occupied = sum(
-                drone.current_hub == destination_hub
-                for drone in self.drones
-                )
+            drone.status != DroneStatus.DELIVERED
+            and drone.current_hub == destination_hub
+            for drone in self.drones
+        )
         return occupied < capacity
 
-        for drone in self.drones:
-            if drone.current_hub == destination_hub:
-                occupied += 1
+    def _allowed_drones_to_move(self) -> list[tuple[Drone, str]]:
+        occupancy = {
+            hub_name: sum(
+                drone.status != DroneStatus.DELIVERED
+                and drone.current_hub == hub_name
+                for drone in self.drones
+            )
+            for hub_name in self.parsed_map.hubs
+        }
+        link_usage: dict[tuple[str, str], int] = {}
+        allowed: list[tuple[Drone, str]] = []
 
-    def _allowed_drones_to_move(self) -> list[Drone]:
-        allowed = []
-
-        for drone in self.drones:
+        for drone in sorted(self.drones, key=lambda item: item.drone_id):
             if drone.status == DroneStatus.DELIVERED:
                 continue
 
-        next_hub = drone.route[drone.current_route_index + 1]
+            route = self._find_route(drone.current_hub)
+            if len(route) == 1:
+                continue
 
-        if self._current_hub_occupancy(next_hub):
-            allowed.append(drone)
+            next_hub = route[1]
+            destination = self.parsed_map.hubs[next_hub]
+            link = (drone.current_hub, next_hub)
+            link_capacity = self.connections[drone.current_hub][next_hub]
+
+            if occupancy[next_hub] >= destination.max_drones:
+                continue
+            if link_usage.get(link, 0) >= link_capacity:
+                continue
+
+            drone.route = route
+            drone.current_route_index = 0
+            occupancy[drone.current_hub] -= 1
+            occupancy[next_hub] += 1
+            link_usage[link] = link_usage.get(link, 0) + 1
+            allowed.append((drone, next_hub))
 
         return allowed
 
     def step(self) -> list[tuple[int, str, str]]:
         movements: list[tuple[int, str, str]] = []
 
-        for drone in self.drones:
-            if drone.status == DroneStatus.DELIVERED:
-                continue
-
+        allowed_moves = self._allowed_drones_to_move()
+        for drone, next_hub in allowed_moves:
             previous_hub = drone.current_hub
             drone.current_route_index += 1
-            drone.current_hub = drone.route[drone.current_route_index]
+            drone.current_hub = next_hub
             drone.status = (
                 DroneStatus.DELIVERED
                 if drone.current_hub == self.parsed_map.end_hub
@@ -84,6 +105,11 @@ class Simulator:
             movements.append(
                 (drone.drone_id, previous_hub, drone.current_hub)
             )
+
+        if not movements and any(
+            drone.status != DroneStatus.DELIVERED for drone in self.drones
+        ):
+            raise RuntimeError("No drone can move; simulation is deadlocked")
 
         self.current_turn += 1
         return movements
