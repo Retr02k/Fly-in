@@ -14,8 +14,9 @@ class Simulator:
 
     def _find_route(self, start: str | None = None) -> list[str]:
         route_start = start or self.parsed_map.start_hub
-        route = GraphTraversal(self.parsed_map).bfs(
+        route = GraphTraversal(self.parsed_map).find_best_route(
             self.connections,
+            self.parsed_map.hubs,
             route_start,
             self.parsed_map.end_hub,
         )
