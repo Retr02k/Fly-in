@@ -18,7 +18,7 @@ def make_traversal() -> GraphTraversal:
     return GraphTraversal(drone_map)
 
 
-def test_bfs_returns_a_shortest_path() -> None:
+def test_find_best_route_returns_a_low_cost_path() -> None:
     connections: dict[str, dict[str, int]] = {
         "start": {"junction": 1},
         "junction": {"start": 1, "path_a": 1, "path_b": 1},
@@ -27,7 +27,12 @@ def test_bfs_returns_a_shortest_path() -> None:
         "goal": {"path_a": 1, "path_b": 1},
     }
 
-    path = make_traversal().bfs(connections, "start", "goal")
+    path = make_traversal().find_best_route(
+        connections,
+        make_traversal().drone_map.hubs,
+        "start",
+        "goal",
+    )
 
     assert path in (
         ["start", "junction", "path_a", "goal"],
@@ -35,31 +40,46 @@ def test_bfs_returns_a_shortest_path() -> None:
     )
 
 
-def test_bfs_handles_cycles() -> None:
+def test_find_best_route_handles_cycles() -> None:
     connections: dict[str, dict[str, int]] = {
         "start": {"loop": 1},
         "loop": {"start": 1, "goal": 1},
         "goal": {"loop": 1},
     }
 
-    assert make_traversal().bfs(connections, "start", "goal") == [
+    traversal = make_traversal()
+    traversal.drone_map.hubs["loop"] = Hub(name="loop")
+    assert traversal.find_best_route(
+        connections,
+        traversal.drone_map.hubs,
         "start",
-        "loop",
         "goal",
-    ]
+    ) == ["start", "loop", "goal"]
 
 
-def test_bfs_returns_none_when_goal_is_unreachable() -> None:
+def test_find_best_route_returns_none_when_goal_is_unreachable() -> None:
     connections: dict[str, dict[str, int]] = {
         "start": {"junction": 1},
         "junction": {"start": 1},
         "goal": {},
     }
 
-    assert make_traversal().bfs(connections, "start", "goal") is None
+    traversal = make_traversal()
+    assert traversal.find_best_route(
+        connections,
+        traversal.drone_map.hubs,
+        "start",
+        "goal",
+    ) is None
 
 
-def test_bfs_returns_start_when_start_is_goal() -> None:
+def test_find_best_route_returns_start_when_start_is_goal() -> None:
     connections: dict[str, dict[str, int]] = {"start": {}}
 
-    assert make_traversal().bfs(connections, "start", "start") == ["start"]
+    traversal = make_traversal()
+    assert traversal.find_best_route(
+        connections,
+        traversal.drone_map.hubs,
+        "start",
+        "start",
+    ) == ["start"]
