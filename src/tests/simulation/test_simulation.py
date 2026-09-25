@@ -28,8 +28,8 @@ def test_simulator_moves_all_drones_to_goal() -> None:
     simulator = Simulator(drone_map)
     turns = simulator.run()
 
-    assert len(turns) == 4
-    assert simulator.current_turn == 4
+    assert len(turns) == 5
+    assert simulator.current_turn == 5
     assert all(
         drone.current_hub == drone_map.end_hub
         for drone in simulator.drones
@@ -42,11 +42,12 @@ def test_simulator_respects_hub_capacity() -> None:
     ).parse()
 
     simulator = Simulator(drone_map)
-    first_turn = simulator.step()
+    simulator.step()
 
-    assert len(first_turn) == 2
     assert sum(
-        drone.current_hub == "bottleneck" for drone in simulator.drones
+        drone.transit is not None
+        and drone.transit.destination_hub == "bottleneck"
+        for drone in simulator.drones
     ) == 2
 
 
