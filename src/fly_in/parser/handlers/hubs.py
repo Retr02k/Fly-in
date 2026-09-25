@@ -22,6 +22,8 @@ def _parse_hub_fields(value: str) -> Hub:
 @register("start_hub")
 def handle_start_hub(builder: MapBuilder, value: str) -> None:
     hub = _parse_hub_fields(value)
+    if hub.name in builder.hubs:
+        raise ValueError(f"Duplicate hub name: {hub.name!r}")
     builder.hubs[hub.name] = hub
     builder.start_hub = hub.name
 
@@ -29,6 +31,8 @@ def handle_start_hub(builder: MapBuilder, value: str) -> None:
 @register("end_hub")
 def handle_end_hub(builder: MapBuilder, value: str) -> None:
     hub = _parse_hub_fields(value)
+    if hub.name in builder.hubs:
+        raise ValueError(f"Duplicate hub name: {hub.name!r}")
     builder.hubs[hub.name] = hub
     builder.end_hub = hub.name
 
@@ -36,4 +40,6 @@ def handle_end_hub(builder: MapBuilder, value: str) -> None:
 @register("hub")
 def handle_hub(builder: MapBuilder, value: str) -> None:
     hub = _parse_hub_fields(value)
+    if hub.name in builder.hubs:
+        raise ValueError(f"Duplicate hub name: {hub.name!r}")
     builder.hubs[hub.name] = hub

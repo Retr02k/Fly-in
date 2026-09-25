@@ -1,5 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, Field
+from fly_in.model.transit import TransitState
 
 
 class DroneStatus(str, Enum):
@@ -14,3 +15,4 @@ class Drone(BaseModel):
     route: list[str] = Field(min_length=1)
     current_route_index: int = 0
     status: DroneStatus = DroneStatus.WAITING
+    transit: TransitState | None = None
