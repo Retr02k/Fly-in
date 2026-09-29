@@ -54,6 +54,15 @@ make lint
 make lint-strict
 ```
 
+For debugger use:
+
+```bash
+make debug
+```
+
+The detailed architecture and implementation rationale are documented in
+[`explanation.md`](explanation.md).
+
 The program also exposes a testable `run_cli()` function. It accepts injected
 input and output streams, so tests do not need to control a real terminal.
 

@@ -2,10 +2,18 @@ from fly_in.model.map import Map
 
 
 class GraphBuilder:
+    """Build graph representations from a validated map."""
+
     def __init__(self, drone_map: Map) -> None:
+        """Initialize a graph builder.
+
+        Args:
+            drone_map: Map whose hubs and connections form the graph.
+        """
         self.drone_map = drone_map
 
     def _validate_connections(self) -> None:
+        """Raise an error when a connection references an unknown hub."""
         hub_names = set(self.drone_map.hubs)
         for connection in self.drone_map.connections:
             missing_hubs = {
@@ -19,6 +27,7 @@ class GraphBuilder:
                 )
 
     def hub_matrix(self) -> list[list[int]]:
+        """Return a coordinate-normalized adjacency occupancy matrix."""
         nb_vertices = len(self.drone_map.hubs)
         matrix = [[0] * nb_vertices for _ in range(nb_vertices)]
         min_x = min(
@@ -38,6 +47,11 @@ class GraphBuilder:
         return matrix
 
     def connectors_dic(self) -> dict[str, dict[str, int]]:
+        """Return bidirectional neighbors and their capacities.
+
+        Returns:
+            A nested mapping from origin hub to destination hub and capacity.
+        """
         self._validate_connections()
         connec_dict: dict[str, dict[str, int]] = {
             hub_name: {} for hub_name in self.drone_map.hubs

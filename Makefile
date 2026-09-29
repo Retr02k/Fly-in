@@ -6,33 +6,33 @@ MYPY_FLAGS := --warn-return-any --warn-unused-ignores\
 
 install:
 	@echo "Installing dependencies and preparing environment..."
-	uv sync
+	@uv sync
 
 run:
 	@echo "Running app...\n"
 	@uv run fly-in
 
 test:
-	uv run pytest -v
+	@uv run pytest -v
 
 test-fast:
-	uv run pytest -x
+	@uv run pytest -x
 
 coverage:
-	uv run pytest --cov=src/fly_in --cov-report=term-missing
+	@uv run pytest --cov=src/fly_in --cov-report=term-missing
 
 debug:
-	uv run python -m pdb fly-in
+	@uv run python -m pdb -m fly_in.cli
 
 lint:
-	uv run flake8 .
-	uv run mypy . $(MYPY_FLAGS)
+	@uv run flake8 .
+	@uv run mypy . $(MYPY_FLAGS)
 
 lint-strict:
-	uv run flake8 .
-	uv run mypy . --strict
+	@uv run flake8 .
+	@uv run mypy . --strict
 
 clean:
 	@echo "Cleaning environment..."
-	$(REMOVE) .venv
-	$(REMOVE) $$(find . -name __pycache__ -o -name .mypy_cache)
+	@$(REMOVE) .venv
+	@$(REMOVE) $$(find . -name __pycache__ -o -name .mypy_cache)

@@ -9,7 +9,14 @@ from fly_in.model.transit import TransitState
 
 
 class Simulator:
+    """Coordinate route planning, transit progression, and drone delivery."""
+
     def __init__(self, parsed_map: Map) -> None:
+        """Initialize a simulator for a validated map.
+
+        Args:
+            parsed_map: Map to simulate.
+        """
         self.parsed_map = parsed_map
         self.connections = GraphBuilder(parsed_map).connectors_dic()
         self._route_cache: dict[tuple[str, str], tuple[str, ...]] = {}
@@ -27,6 +34,7 @@ class Simulator:
         self.last_arrivals: list[tuple[int, str, str]] = []
 
     def _find_route(self, start: str | None = None) -> list[str]:
+        """Return a cached or newly calculated route to the goal."""
         route_start = start or self.parsed_map.start_hub
         cache_key = (route_start, self.parsed_map.end_hub)
         cached_route = self._route_cache.get(cache_key)
@@ -50,6 +58,7 @@ class Simulator:
         return route
 
     def _path_cost(self, route: list[str]) -> int:
+        """Calculate the weighted cost of a route."""
         return sum(
             ZONE_COST[self.parsed_map.hubs[hub_name].zone_type]
             for hub_name in route[1:]
@@ -57,6 +66,7 @@ class Simulator:
 
     @staticmethod
     def _link_key(origin: str, destination: str) -> tuple[str, str]:
+        """Return a canonical key for an undirected connection."""
         return (
             (origin, destination)
             if origin <= destination
@@ -64,6 +74,7 @@ class Simulator:
         )
 
     def _create_drones(self) -> list[Drone]:
+        """Create one waiting drone for each configured drone ID."""
         return [
             Drone(
                 drone_id=drone_id,
@@ -79,6 +90,11 @@ class Simulator:
         ]
 
     def _plan_allowed_moves(self) -> list[PlannedMove]:
+        """Plan legal moves without mutating drone state.
+
+        Returns:
+            Approved moves in deterministic drone-ID order.
+        """
         occupancy = {
             hub_name: sum(
                 drone.status not in (
@@ -155,6 +171,11 @@ class Simulator:
         self,
         planned_moves: list[PlannedMove],
     ) -> None:
+        """Apply approved moves by creating active transit states.
+
+        Args:
+            planned_moves: Moves selected during the current planning phase.
+        """
         for move in planned_moves:
             drone = move.drone
             drone.route = self._find_route(move.origin_hub)
@@ -171,6 +192,7 @@ class Simulator:
             ]
 
     def _progress_transit(self) -> list[tuple[int, str, str]]:
+        """Advance active transit and return completed arrivals."""
         movements: list[tuple[int, str, str]] = []
 
         for drone in self.drones:
@@ -205,6 +227,14 @@ class Simulator:
         return movements
 
     def step(self) -> list[tuple[int, str, str]]:
+        """Resolve one simulation turn.
+
+        Returns:
+            Arrivals completed during this turn.
+
+        Raises:
+            RuntimeError: If no active or planned movement can continue.
+        """
         movements = self._progress_transit()
         planned_moves = self._plan_allowed_moves()
         self._apply_planned_moves(planned_moves)
@@ -234,6 +264,11 @@ class Simulator:
         return movements
 
     def run(self) -> list[list[tuple[int, str, str]]]:
+        """Run turns until every drone reaches the goal.
+
+        Returns:
+            Arrivals grouped by simulation turn.
+        """
         turns: list[list[tuple[int, str, str]]] = []
         while any(
             drone.status != DroneStatus.DELIVERED for drone in self.drones

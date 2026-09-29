@@ -5,6 +5,17 @@ from fly_in.model.hub import Hub
 
 
 def _parse_hub_fields(value: str) -> Hub:
+    """Parse a hub declaration into a typed hub model.
+
+    Args:
+        value: Hub name, coordinates, and optional settings.
+
+    Returns:
+        The parsed hub.
+
+    Raises:
+        ValueError: If coordinates or settings are invalid.
+    """
     match = re.fullmatch(
         r"(?P<name>\S+)\s+(?P<x>\S+)\s+(?P<y>\S+)"
         r"\s*(?:\[(?P<settings>.*)\])?",
@@ -35,6 +46,15 @@ def _parse_hub_fields(value: str) -> Hub:
 
 
 def _ensure_unique_hub(builder: MapBuilder, hub: Hub) -> None:
+    """Ensure a hub name and coordinates are unique in the map.
+
+    Args:
+        builder: Parser state containing previously declared hubs.
+        hub: Newly parsed hub to validate.
+
+    Raises:
+        ValueError: If the name or coordinates are already used.
+    """
     if hub.name in builder.hubs:
         raise ValueError(f"Duplicate hub name: {hub.name!r}")
     for other_name, other_hub in builder.hubs.items():
@@ -47,6 +67,7 @@ def _ensure_unique_hub(builder: MapBuilder, hub: Hub) -> None:
 
 @register("start_hub")
 def handle_start_hub(builder: MapBuilder, value: str) -> None:
+    """Parse the single allowed start-hub declaration."""
     if builder.start_hub:
         raise ValueError("exactly one start_hub is allowed")
     hub = _parse_hub_fields(value)
@@ -59,6 +80,7 @@ def handle_start_hub(builder: MapBuilder, value: str) -> None:
 
 @register("end_hub")
 def handle_end_hub(builder: MapBuilder, value: str) -> None:
+    """Parse the single allowed end-hub declaration."""
     if builder.end_hub:
         raise ValueError("exactly one end_hub is allowed")
     hub = _parse_hub_fields(value)
@@ -71,6 +93,7 @@ def handle_end_hub(builder: MapBuilder, value: str) -> None:
 
 @register("hub")
 def handle_hub(builder: MapBuilder, value: str) -> None:
+    """Parse and add a regular hub declaration."""
     hub = _parse_hub_fields(value)
     _ensure_unique_hub(builder, hub)
     builder.hubs[hub.name] = hub

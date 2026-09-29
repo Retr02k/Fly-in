@@ -15,10 +15,18 @@ _ANSI_COLORS = {
 
 
 def _connection_label(origin: str, destination: str) -> str:
+    """Format a connection endpoint pair for terminal output."""
     return f"{origin}-{destination}"
 
 
 def _render_map(simulator: Simulator, stream: TextIO, color: bool) -> None:
+    """Render the current hub and in-transit drone state.
+
+    Args:
+        simulator: Simulation whose current state should be displayed.
+        stream: Text stream receiving the rendered view.
+        color: Whether ANSI hub colors should be emitted.
+    """
     parsed_map = simulator.parsed_map
     print(
         f"Turn {simulator.current_turn} | "
@@ -53,6 +61,7 @@ def _render_map(simulator: Simulator, stream: TextIO, color: bool) -> None:
 
 
 def _turn_output(simulator: Simulator) -> str:
+    """Describe arrivals and departures from the latest turn."""
     lines = [f"\nTurn {simulator.current_turn} movement events:"]
     for drone_id, origin, destination in simulator.last_arrivals:
         lines.append(
@@ -79,6 +88,7 @@ def _turn_output(simulator: Simulator) -> str:
 
 
 def _print_stats(simulator: Simulator, stream: TextIO) -> None:
+    """Write completion metrics for a simulation to a stream."""
     stats = simulator.stats
     print("\nSimulation statistics", file=stream)
     print(f"  Turns: {simulator.current_turn}", file=stream)
@@ -108,6 +118,19 @@ def run_cli(
     output_stream: TextIO = sys.stdout,
     log_path: str | None = None,
 ) -> int:
+    """Run a simulation with injectable terminal streams.
+
+    Args:
+        map_path: Map file to parse and simulate.
+        step_mode: Pause for input between turns when true.
+        color: Enable ANSI colors in the map rendering.
+        input_stream: Stream used for step-mode input.
+        output_stream: Stream receiving terminal output.
+        log_path: Optional relative path below ``output/`` for a log.
+
+    Returns:
+        Zero on completion or 130 when interrupted by the user.
+    """
     simulator = Simulator(MapParser(filepath=map_path).parse())
     log_stream: TextIO | None = None
     try:
@@ -177,6 +200,7 @@ def _choose_map(
     input_stream: TextIO,
     output_stream: TextIO,
 ) -> str | None:
+    """Display map choices and return the selected readable path."""
     maps = sorted(Path("src/maps").glob("**/*.txt"))
     print("\nAvailable maps:", file=output_stream)
     for index, map_path in enumerate(maps, 1):
@@ -209,6 +233,7 @@ def _choose_map(
 
 
 def main() -> None:
+    """Run the interactive menu application."""
     input_stream, output_stream = sys.stdin, sys.stdout
     try:
         print("Fly-in simulation", file=output_stream)
@@ -242,3 +267,7 @@ def main() -> None:
         raise SystemExit(f"Map error: {error}") from error
     except (OSError, ValueError) as error:
         raise SystemExit(f"Unable to run simulation: {error}") from error
+
+
+if __name__ == "__main__":
+    main()

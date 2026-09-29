@@ -12,7 +12,16 @@ Handler = Callable[[MapBuilder, str], None]
 
 
 def register(key: str) -> Callable[[Handler], Handler]:
+    """Register a parser handler for a map directive.
+
+    Args:
+        key: Directive name appearing before the colon in a map line.
+
+    Returns:
+        A decorator that adds a handler to the global registry.
+    """
     def decorator(fn: Handler) -> Handler:
+        """Store and return a directive handler."""
         HANDLERS[key] = fn
         return fn
 
@@ -20,9 +29,19 @@ def register(key: str) -> Callable[[Handler], Handler]:
 
 
 class MapParser(BaseModel):
+    """Parse a map file into a validated map model."""
     filepath: str
 
     def parse(self) -> Map:
+        """Read and validate the configured map file.
+
+        Returns:
+            The parsed and validated map.
+
+        Raises:
+            MapParseError: If a directive or structural rule is invalid.
+            OSError: If the file cannot be opened.
+        """
         from fly_in.parser import handlers  # noqa: F401
 
         builder = MapBuilder()
@@ -67,6 +86,7 @@ class MapParser(BaseModel):
 
     @staticmethod
     def _error_line(builder: MapBuilder, message: str) -> int:
+        """Select the most relevant declaration line for a build error."""
         if "nb_drones" in message:
             return builder.nb_drones_line or 1
         if "start hub" in message:
@@ -77,6 +97,7 @@ class MapParser(BaseModel):
 
     @staticmethod
     def _validate_builder(builder: MapBuilder) -> None:
+        """Validate parser-level required directives and connections."""
         if not builder.nb_drones_line:
             raise ValueError("missing nb_drones directive")
         if not builder.start_hub:
