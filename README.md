@@ -99,7 +99,8 @@ Errors identify the source file, physical line, and reason. For example:
 
 ```text
 maps/example.txt: line 4: nb_drones must be greater than zero
-maps/example.txt: line 7: hub 'waypoint1' has the same coordinates as hub 'start'
+maps/example.txt: line 7: hub 'waypoint1' has the same coordinates
+as hub 'start'
 ```
 
 This makes malformed input easier to correct without exposing an internal
@@ -150,8 +151,8 @@ is not physically occupying either endpoint hub.
 - Dijkstra's algorithm: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 - 42 Lisboa project subject and map-format specification.
 
-AI was used as an engineering aid during development. It helped inspect the
-existing architecture, reason about restricted transit and capacity
-reservations, propose test cases, identify typing and lint issues, and draft
-implementation/documentation changes. The project decisions, code review,
-validation, and final responsibility remain with the author.
+AI was used as an engineering aid during development. The project was
+designed and implemented by the author, with AI assistance for architecture
+discussions, debugging, test design, documentation, and code review. The
+author made the final implementation decisions, validated the results, and is
+responsible for understanding and maintaining the code.
