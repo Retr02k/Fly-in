@@ -4,6 +4,15 @@ from fly_in.parser.map_builder import MapBuilder
 
 @register("nb_drones")
 def handle_nb_drones(builder: MapBuilder, value: str) -> None:
+    """Parse and validate the number of drones directive.
+
+    Args:
+        builder: Parser state being populated.
+        value: Text following the ``nb_drones:`` directive.
+
+    Raises:
+        ValueError: If the value is not a positive integer.
+    """
     try:
         nb_drones = int(value)
     except ValueError as error:

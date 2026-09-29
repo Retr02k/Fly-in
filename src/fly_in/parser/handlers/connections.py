@@ -6,6 +6,15 @@ import re
 
 @register("connection")
 def handle_connection(builder: MapBuilder, value: str) -> None:
+    """Parse a connection directive and add it to the builder.
+
+    Args:
+        builder: Parser state receiving the connection.
+        value: Text containing the two hub names and optional capacity.
+
+    Raises:
+        ValueError: If the syntax or capacity is invalid.
+    """
     match = re.fullmatch(
         r"(?P<from_hub>[^-\s]+)-(?P<to_hub>[^-\s]+)"
         r"(?:\s+\[max_link_capacity=(?P<capacity>\d+)\])?",
