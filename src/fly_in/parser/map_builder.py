@@ -11,6 +11,12 @@ class MapBuilder:
     connections: list[Connection] = field(default_factory=list)
     start_hub: str = ""
     end_hub: str = ""
+    current_line: int = 0
+    nb_drones_line: int = 0
+    start_hub_line: int = 0
+    end_hub_line: int = 0
+    hub_lines: dict[str, int] = field(default_factory=dict)
+    connection_lines: list[int] = field(default_factory=list)
 
     def build(self) -> Map:
         return Map(

@@ -7,7 +7,7 @@ import re
 @register("connection")
 def handle_connection(builder: MapBuilder, value: str) -> None:
     match = re.fullmatch(
-        r"(?P<from_hub>\S+)-(?P<to_hub>\S+)"
+        r"(?P<from_hub>[^-\s]+)-(?P<to_hub>[^-\s]+)"
         r"(?:\s+\[max_link_capacity=(?P<capacity>\d+)\])?",
         value.strip(),
     )
@@ -25,3 +25,4 @@ def handle_connection(builder: MapBuilder, value: str) -> None:
             max_link_capacity=capacity,
         )
     )
+    builder.connection_lines.append(builder.current_line)
