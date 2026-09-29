@@ -42,5 +42,8 @@ def test_parse_raises_on_unknown_directive(tmp_path: Path) -> None:
     bad_path.write_text("mystery_field: something\n")
     parser = MapParser(filepath=str(bad_path))
 
-    with pytest.raises(ValueError, match="Unknown map directive"):
+    with pytest.raises(
+        ValueError,
+        match=r"bad\.map: line 1: unknown map directive",
+    ):
         parser.parse()

@@ -1,0 +1,11 @@
+# Deterministic edge-case fixture: restricted transit and capacity.
+nb_drones: 3
+
+start_hub: start 0 0 [color=green]
+hub: gate 1 0 [zone=restricted color=orange max_drones=1]
+hub: waiting 2 0 [color=blue max_drones=2]
+end_hub: goal 3 0 [color=red]
+
+connection: start-gate [max_link_capacity=1]
+connection: gate-waiting [max_link_capacity=1]
+connection: waiting-goal [max_link_capacity=2]

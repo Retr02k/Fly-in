@@ -1,3 +1,11 @@
-class MapParseError(Exception):
-    def __init__(self, line: int, message: str) -> None:
-        super().__init__(f"Line {line}: {message}")
+class MapParseError(ValueError):
+    def __init__(
+        self,
+        filepath: str,
+        line: int,
+        message: str,
+    ) -> None:
+        self.filepath = filepath
+        self.line = line
+        self.message = message
+        super().__init__(f"{filepath}: line {line}: {message}")

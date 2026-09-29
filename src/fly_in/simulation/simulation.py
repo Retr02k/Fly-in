@@ -1,9 +1,10 @@
 from fly_in.graph.builder import GraphBuilder
-from fly_in.graph.pathfinding import GraphTraversal
+from fly_in.graph.pathfinding import GraphTraversal, ZONE_COST
 from fly_in.header.header import ZoneType
 from fly_in.model.drone import Drone, DroneStatus
 from fly_in.model.map import Map
 from fly_in.model.movement import PlannedMove
+from fly_in.model.report import SimulationStats
 from fly_in.model.transit import TransitState
 
 
@@ -11,12 +12,28 @@ class Simulator:
     def __init__(self, parsed_map: Map) -> None:
         self.parsed_map = parsed_map
         self.connections = GraphBuilder(parsed_map).connectors_dic()
+        self._route_cache: dict[tuple[str, str], tuple[str, ...]] = {}
+        self.route_cache_hits = 0
+        self.route_cache_misses = 0
         self.route = self._find_route()
         self.drones = self._create_drones()
         self.current_turn = 0
+        self.stats = SimulationStats()
+        self.stats.path_costs = {
+            drone_id: 0
+            for drone_id in range(1, parsed_map.nb_drones + 1)
+        }
+        self.last_planned_moves: list[PlannedMove] = []
+        self.last_arrivals: list[tuple[int, str, str]] = []
 
     def _find_route(self, start: str | None = None) -> list[str]:
         route_start = start or self.parsed_map.start_hub
+        cache_key = (route_start, self.parsed_map.end_hub)
+        cached_route = self._route_cache.get(cache_key)
+        if cached_route is not None:
+            self.route_cache_hits += 1
+            return list(cached_route)
+
         route = GraphTraversal(self.parsed_map).find_best_route(
             self.connections,
             self.parsed_map.hubs,
@@ -28,7 +45,15 @@ class Simulator:
                 f"No route from {route_start!r} "
                 f"to {self.parsed_map.end_hub!r}"
             )
+        self.route_cache_misses += 1
+        self._route_cache[cache_key] = tuple(route)
         return route
+
+    def _path_cost(self, route: list[str]) -> int:
+        return sum(
+            ZONE_COST[self.parsed_map.hubs[hub_name].zone_type]
+            for hub_name in route[1:]
+        )
 
     @staticmethod
     def _link_key(origin: str, destination: str) -> tuple[str, str]:
@@ -141,6 +166,9 @@ class Simulator:
                 remaining_transit_turns=move.duration,
             )
             drone.status = DroneStatus.MOVING
+            self.stats.path_costs[drone.drone_id] += ZONE_COST[
+                self.parsed_map.hubs[move.destination_hub].zone_type
+            ]
 
     def _progress_transit(self) -> list[tuple[int, str, str]]:
         movements: list[tuple[int, str, str]] = []
@@ -165,6 +193,10 @@ class Simulator:
                 if drone.current_hub == self.parsed_map.end_hub
                 else DroneStatus.WAITING
             )
+            if drone.status == DroneStatus.DELIVERED:
+                self.stats.delivery_turns[drone.drone_id] = (
+                    self.current_turn + 1
+                )
             drone.transit = None
             movements.append(
                 (drone.drone_id, previous_hub, drone.current_hub)
@@ -176,6 +208,19 @@ class Simulator:
         movements = self._progress_transit()
         planned_moves = self._plan_allowed_moves()
         self._apply_planned_moves(planned_moves)
+        self.last_arrivals = movements
+        self.last_planned_moves = planned_moves
+        self.stats.movement_counts.append(
+            len(movements) + len(planned_moves)
+        )
+        for drone in self.drones:
+            if drone.status == DroneStatus.WAITING:
+                self.stats.waiting_turns[drone.drone_id] = (
+                    self.stats.waiting_turns.get(drone.drone_id, 0) + 1
+                )
+        self.stats.restricted_transits += sum(
+            move.duration > 1 for move in planned_moves
+        )
 
         active_transit = any(
             drone.status == DroneStatus.MOVING for drone in self.drones
