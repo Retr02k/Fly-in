@@ -78,9 +78,8 @@ def _turn_output(simulator: Simulator) -> str:
             )
         else:
             lines.append(
-                f"  D{move.drone.drone_id} departed {move.origin_hub} "
-                f"towards {move.destination_hub} "
-                f"(arrival next turn)."
+                f"  D{move.drone.drone_id} moved {move.origin_hub} "
+                f"-> {move.destination_hub} (arrived this turn)."
             )
     if len(lines) == 1:
         lines.append("  No drone movement.")
@@ -150,6 +149,9 @@ def run_cli(
             resolved_path.parent.mkdir(parents=True, exist_ok=True)
             log_stream = open(resolved_path, "w")
         try:
+            _render_map(simulator, output_stream, color)
+            if log_stream is not None:
+                _render_map(simulator, log_stream, False)
             while any(
                 drone.status != DroneStatus.DELIVERED
                 for drone in simulator.drones

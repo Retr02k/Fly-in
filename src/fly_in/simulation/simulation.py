@@ -186,26 +186,47 @@ class Simulator:
     def _apply_planned_moves(
         self,
         planned_moves: list[PlannedMove],
-    ) -> None:
-        """Apply approved moves by creating active transit states.
+    ) -> list[tuple[int, str, str]]:
+        """Apply approved moves and return completed arrivals.
 
         Args:
             planned_moves: Moves selected during the current planning phase.
+
+        Returns:
+            Arrivals completed during the current turn.
         """
+        arrivals: list[tuple[int, str, str]] = []
         for move in planned_moves:
             drone = move.drone
             drone.route = self._find_route(move.origin_hub)
             drone.current_route_index = 0
+            self.stats.path_costs[drone.drone_id] += ZONE_COST[
+                self.parsed_map.hubs[move.destination_hub].zone_type
+            ]
+            if move.duration == 1:
+                drone.current_hub = move.destination_hub
+                drone.current_route_index += 1
+                drone.status = (
+                    DroneStatus.DELIVERED
+                    if drone.current_hub == self.parsed_map.end_hub
+                    else DroneStatus.WAITING
+                )
+                if drone.status == DroneStatus.DELIVERED:
+                    self.stats.delivery_turns[drone.drone_id] = (
+                        self.current_turn + 1
+                    )
+                arrivals.append(
+                    (drone.drone_id, move.origin_hub, move.destination_hub)
+                )
+                continue
             drone.transit = TransitState(
                 origin_hub=move.origin_hub,
                 destination_hub=move.destination_hub,
                 connection=move.connection,
-                remaining_transit_turns=move.duration,
+                remaining_transit_turns=move.duration - 1,
             )
             drone.status = DroneStatus.MOVING
-            self.stats.path_costs[drone.drone_id] += ZONE_COST[
-                self.parsed_map.hubs[move.destination_hub].zone_type
-            ]
+        return arrivals
 
     def _progress_transit(self) -> list[tuple[int, str, str]]:
         """Advance active transit and return completed arrivals."""
@@ -253,12 +274,10 @@ class Simulator:
         """
         movements = self._progress_transit()
         planned_moves = self._plan_allowed_moves()
-        self._apply_planned_moves(planned_moves)
+        movements.extend(self._apply_planned_moves(planned_moves))
         self.last_arrivals = movements
         self.last_planned_moves = planned_moves
-        self.stats.movement_counts.append(
-            len(movements) + len(planned_moves)
-        )
+        self.stats.movement_counts.append(len(planned_moves))
         for drone in self.drones:
             if drone.status == DroneStatus.WAITING:
                 self.stats.waiting_turns[drone.drone_id] = (

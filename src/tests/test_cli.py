@@ -20,7 +20,7 @@ def test_cli_runs_map_and_reports_delivery() -> None:
     rendered = output.getvalue()
     assert result == 0
     assert "Turn 1 movement events:" in rendered
-    assert "D1 departed start towards waypoint1" in rendered
+    assert "D1 moved start -> waypoint1 (arrived this turn)." in rendered
     assert "D1 arrived at goal" in rendered
     assert "Delivered 2 drones" in rendered
     assert "Simulation statistics" in rendered
@@ -46,7 +46,7 @@ def test_cli_overwrites_requested_log(
 
     content = (tmp_path / "output" / "simulation.log").read_text()
     assert "old content" not in content
-    assert "Delivered 2 drones in 5 turns." in content
+    assert "Delivered 2 drones in 4 turns." in content
 
 
 def test_custom_map_selection_prompts_for_path() -> None:
@@ -81,8 +81,14 @@ def test_cli_handles_keyboard_interrupt_and_closes_log(
 ) -> None:
     class InterruptingSimulator:
         def __init__(self, parsed_map: object) -> None:
+            self.parsed_map = parsed_map
+            self.current_turn = 0
             self.drones = [
-                SimpleNamespace(status=DroneStatus.WAITING),
+                SimpleNamespace(
+                    drone_id=1,
+                    status=DroneStatus.WAITING,
+                    current_hub="start",
+                ),
             ]
 
         def step(self) -> None:
@@ -103,4 +109,6 @@ def test_cli_handles_keyboard_interrupt_and_closes_log(
     assert result == 130
     assert "Simulation interrupted by user." in output.getvalue()
     log = tmp_path / "output" / "interrupted.log"
-    assert log.read_text() == "Simulation interrupted by user.\n"
+    log_content = log.read_text()
+    assert "Turn 0 | start -> goal" in log_content
+    assert log_content.endswith("Simulation interrupted by user.\n")
