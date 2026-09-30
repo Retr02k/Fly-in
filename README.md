@@ -152,6 +152,22 @@ restricted drones in transit on a connection. The hub snapshot below each
 turn shows where drones are physically located; a drone listed as in transit
 is not physically occupying either endpoint hub.
 
+## Benchmark notes
+
+The circular-loop map currently requires 16 turns under the literal subject
+constraints. Every drone must first spend two normal moves reaching
+`loop_b`; the `loop_b-exit_point` connection has capacity one, and entering
+`exit_point` takes two turns. The earliest restricted departures are therefore
+turns 3, 5, 7, 9, 11, and 13. The final drone reaches `exit_point` on turn 15
+and can reach `goal` on turn 16. Alternative paths around the loop are longer
+and cannot improve this lower bound. This is documented rather than “fixed” by
+relaxing connection capacity or restricted-transit rules.
+
+The `test_edge_cases.txt` fixture is not a deadlock: the subject explicitly
+allows drones to stay in place when movement is temporarily blocked. The
+simulator retries those drones on later turns and completes the fixture in
+nine turns. Restricted transit itself cannot pause.
+
 ## Resources
 
 - Python documentation: https://docs.python.org/3/
