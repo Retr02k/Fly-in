@@ -73,6 +73,22 @@ class Simulator:
             else (destination, origin)
         )
 
+    def _hub_capacity(self, hub_name: str) -> int:
+        """Return the active occupancy limit for a hub.
+
+        The subject defines the end hub as an unlimited delivery sink. Its
+        parsed metadata is therefore not applied to arriving drones.
+
+        Args:
+            hub_name: Name of the hub whose capacity is needed.
+
+        Returns:
+            The effective occupancy limit.
+        """
+        if hub_name == self.parsed_map.end_hub:
+            return len(self.drones)
+        return self.parsed_map.hubs[hub_name].max_drones
+
     def _create_drones(self) -> list[Drone]:
         """Create one waiting drone for each configured drone ID."""
         return [
@@ -137,7 +153,7 @@ class Simulator:
             link_key = self._link_key(*link)
             link_capacity = self.connections[drone.current_hub][next_hub]
 
-            if occupancy[next_hub] >= destination.max_drones:
+            if occupancy[next_hub] >= self._hub_capacity(next_hub):
                 continue
             if link_usage.get(link_key, 0) >= link_capacity:
                 continue

@@ -65,3 +65,51 @@ def test_simulator_respects_link_capacity() -> None:
         destination == "goal"
         for _, _, destination in third_turn
     ) <= 2
+
+
+def test_simulator_treats_end_hub_as_unlimited_sink() -> None:
+    drone_map = MapParser(
+        filepath="src/maps/easy/03_basic_capacity.txt"
+    ).parse()
+
+    simulator = Simulator(drone_map)
+
+    assert len(simulator.run()) <= 6
+    assert all(
+        drone.current_hub == drone_map.end_hub
+        for drone in simulator.drones
+    )
+
+
+def test_circular_loop_preserves_restricted_link_capacity() -> None:
+    drone_map = MapParser(
+        filepath="src/maps/medium/02_circular_loop.txt"
+    ).parse()
+
+    simulator = Simulator(drone_map)
+    restricted_departures: list[int] = []
+
+    while any(drone.status.value != "delivered" for drone in simulator.drones):
+        simulator.step()
+        restricted_departures.extend(
+            simulator.current_turn
+            for move in simulator.last_planned_moves
+            if move.destination_hub == "exit_point"
+        )
+
+    assert restricted_departures == [3, 5, 7, 9, 11, 13]
+    assert simulator.current_turn == 16
+
+
+def test_edge_case_map_waits_until_capacity_is_available() -> None:
+    drone_map = MapParser(
+        filepath="src/maps/test_edge_cases.txt"
+    ).parse()
+
+    simulator = Simulator(drone_map)
+
+    assert len(simulator.run()) == 9
+    assert all(
+        drone.current_hub == drone_map.end_hub
+        for drone in simulator.drones
+    )
