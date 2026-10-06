@@ -1,24 +1,34 @@
 from io import StringIO
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 
 import pytest
 
 import fly_in.cli as cli
-from fly_in.cli import _choose_map, run_cli
+from fly_in.cli import _choose_map
 from fly_in.model.drone import DroneStatus
 
 
-def test_cli_runs_map_and_reports_delivery() -> None:
+def test_cli_runs_map_and_reports_delivery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     output = StringIO()
-
-    result = run_cli(
-        "src/maps/easy/01_linear_path.txt",
-        output_stream=output,
+    map_path = (
+        Path(__file__).resolve().parents[1]
+        / "maps/easy/01_linear_path.txt"
     )
+    monkeypatch.setattr(
+        sys,
+        "stdin",
+        StringIO(f"c\n{map_path}\n1\nn\n"),
+    )
+    monkeypatch.setattr(sys, "stdout", output)
+    with pytest.raises(SystemExit) as error:
+        cli.main()
 
     rendered = output.getvalue()
-    assert result == 0
+    assert error.value.code == 0
     assert "Turn 1 movement events:" in rendered
     assert "D1 moved start -> waypoint1 (arrived this turn)." in rendered
     assert "D1 arrived at goal" in rendered
@@ -38,11 +48,15 @@ def test_cli_overwrites_requested_log(
         / "src/maps/easy/01_linear_path.txt"
     )
 
-    run_cli(
-        str(map_path),
-        output_stream=StringIO(),
-        log_path=str(log_path),
+    monkeypatch.setattr(
+        sys,
+        "stdin",
+        StringIO(f"c\n{map_path}\n1\ny\nsimulation.log\n"),
     )
+    monkeypatch.setattr(sys, "stdout", StringIO())
+    with pytest.raises(SystemExit) as error:
+        cli.main()
+    assert error.value.code == 0
 
     content = (tmp_path / "output" / "simulation.log").read_text()
     assert "old content" not in content
@@ -60,19 +74,24 @@ def test_custom_map_selection_prompts_for_path() -> None:
     assert "Enter the path to the map file:" in output.getvalue()
 
 
-def test_log_path_cannot_escape_output_directory(tmp_path: Path) -> None:
+def test_log_path_cannot_escape_output_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     output = StringIO()
 
-    try:
-        run_cli(
-            "src/maps/easy/01_linear_path.txt",
-            output_stream=output,
-            log_path="../unsafe.log",
-        )
-    except ValueError as error:
-        assert "inside the output directory" in str(error)
-    else:
-        raise AssertionError("Unsafe log path was accepted")
+    monkeypatch.setattr(
+        sys,
+        "stdin",
+        StringIO("1\n1\ny\n../unsafe.log\n"),
+    )
+    monkeypatch.setattr(sys, "stdout", output)
+    with pytest.raises(SystemExit) as error:
+        cli.main()
+    assert error.value.code == (
+        "Unable to run simulation: "
+        "Log path must stay inside the output directory."
+    )
 
 
 def test_cli_handles_keyboard_interrupt_and_closes_log(
@@ -97,16 +116,24 @@ def test_cli_handles_keyboard_interrupt_and_closes_log(
     monkeypatch.setattr(cli, "Simulator", InterruptingSimulator)
     monkeypatch.chdir(tmp_path)
     output = StringIO()
-    result = run_cli(
-        str(
-            Path(__file__).resolve().parents[2]
-            / "src/maps/easy/01_linear_path.txt"
-        ),
-        output_stream=output,
-        log_path="interrupted.log",
+    map_path = (
+        Path(__file__).resolve().parents[2]
+        / "src/maps/easy/01_linear_path.txt"
     )
+    monkeypatch.setattr(
+        sys,
+        "stdin",
+        StringIO(
+            "c\n"
+            f"{map_path}\n"
+            "1\ny\ninterrupted.log\n"
+        ),
+    )
+    monkeypatch.setattr(sys, "stdout", output)
+    with pytest.raises(SystemExit) as error:
+        cli.main()
 
-    assert result == 130
+    assert error.value.code == 130
     assert "Simulation interrupted by user." in output.getvalue()
     log = tmp_path / "output" / "interrupted.log"
     log_content = log.read_text()

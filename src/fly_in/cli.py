@@ -108,96 +108,6 @@ def _print_stats(simulator: Simulator, stream: TextIO) -> None:
     )
 
 
-def run_cli(
-    map_path: str,
-    *,
-    step_mode: bool = False,
-    color: bool = False,
-    input_stream: TextIO = sys.stdin,
-    output_stream: TextIO = sys.stdout,
-    log_path: str | None = None,
-) -> int:
-    """Run a simulation with injectable terminal streams.
-
-    Args:
-        map_path: Map file to parse and simulate.
-        step_mode: Pause for input between turns when true.
-        color: Enable ANSI colors in the map rendering.
-        input_stream: Stream used for step-mode input.
-        output_stream: Stream receiving terminal output.
-        log_path: Optional relative path below ``output/`` for a log.
-
-    Returns:
-        Zero on completion or 130 when interrupted by the user.
-    """
-    simulator = Simulator(MapParser(filepath=map_path).parse())
-    log_stream: TextIO | None = None
-    try:
-        if log_path is not None:
-            output_root = Path.cwd() / "output"
-            output_root.mkdir(exist_ok=True)
-            requested_path = Path(log_path)
-            if requested_path.is_absolute():
-                raise ValueError(
-                    "Log path must be relative to the output directory."
-                )
-            resolved_path = (output_root / requested_path).resolve()
-            if output_root.resolve() not in resolved_path.parents:
-                raise ValueError(
-                    "Log path must stay inside the output directory."
-                )
-            resolved_path.parent.mkdir(parents=True, exist_ok=True)
-            log_stream = open(resolved_path, "w")
-        try:
-            _render_map(simulator, output_stream, color)
-            if log_stream is not None:
-                _render_map(simulator, log_stream, False)
-            while any(
-                drone.status != DroneStatus.DELIVERED
-                for drone in simulator.drones
-            ):
-                simulator.step()
-                line = _turn_output(simulator)
-                print(line, file=output_stream)
-                if log_stream is not None:
-                    print(line, file=log_stream)
-                _render_map(simulator, output_stream, color)
-                if step_mode and any(
-                    drone.status != DroneStatus.DELIVERED
-                    for drone in simulator.drones
-                ):
-                    print(
-                        "Press Enter for the next turn...",
-                        file=output_stream,
-                    )
-                    input_stream.readline()
-            print(
-                f"Delivered {len(simulator.drones)} drones in "
-                f"{simulator.current_turn} turns.",
-                file=output_stream,
-            )
-            _print_stats(simulator, output_stream)
-            if log_stream is not None:
-                print(
-                    f"Delivered {len(simulator.drones)} drones in "
-                    f"{simulator.current_turn} turns.",
-                    file=log_stream,
-                )
-                _print_stats(simulator, log_stream)
-        except KeyboardInterrupt:
-            print(
-                "\nSimulation interrupted by user.",
-                file=output_stream,
-            )
-            if log_stream is not None:
-                print("Simulation interrupted by user.", file=log_stream)
-            return 130
-    finally:
-        if log_stream is not None:
-            log_stream.close()
-    return 0
-
-
 def _choose_map(
     input_stream: TextIO,
     output_stream: TextIO,
@@ -254,14 +164,72 @@ def main() -> None:
                 file=output_stream,
             )
             log_path = input_stream.readline().strip()
-        raise SystemExit(run_cli(
-            map_path,
-            step_mode=mode == "2",
-            color=output_stream.isatty(),
-            input_stream=input_stream,
-            output_stream=output_stream,
-            log_path=log_path,
-        ))
+        simulator = Simulator(MapParser(filepath=map_path).parse())
+        log_stream: TextIO | None = None
+        try:
+            if log_path is not None:
+                output_root = Path.cwd() / "output"
+                output_root.mkdir(exist_ok=True)
+                requested_path = Path(log_path)
+                if requested_path.is_absolute():
+                    raise ValueError(
+                        "Log path must be relative to the output directory."
+                    )
+                resolved_path = (output_root / requested_path).resolve()
+                if output_root.resolve() not in resolved_path.parents:
+                    raise ValueError(
+                        "Log path must stay inside the output directory."
+                    )
+                resolved_path.parent.mkdir(parents=True, exist_ok=True)
+                log_stream = open(resolved_path, "w")
+            color = output_stream.isatty()
+            _render_map(simulator, output_stream, color)
+            if log_stream is not None:
+                _render_map(simulator, log_stream, False)
+            while any(
+                drone.status != DroneStatus.DELIVERED
+                for drone in simulator.drones
+            ):
+                simulator.step()
+                line = _turn_output(simulator)
+                print(line, file=output_stream)
+                if log_stream is not None:
+                    print(line, file=log_stream)
+                _render_map(simulator, output_stream, color)
+                if mode == "2" and any(
+                    drone.status != DroneStatus.DELIVERED
+                    for drone in simulator.drones
+                ):
+                    print(
+                        "Press Enter for the next turn...",
+                        file=output_stream,
+                    )
+                    input_stream.readline()
+            print(
+                f"Delivered {len(simulator.drones)} drones in "
+                f"{simulator.current_turn} turns.",
+                file=output_stream,
+            )
+            _print_stats(simulator, output_stream)
+            if log_stream is not None:
+                print(
+                    f"Delivered {len(simulator.drones)} drones in "
+                    f"{simulator.current_turn} turns.",
+                    file=log_stream,
+                )
+                _print_stats(simulator, log_stream)
+        except KeyboardInterrupt:
+            print(
+                "\nSimulation interrupted by user.",
+                file=output_stream,
+            )
+            if log_stream is not None:
+                print("Simulation interrupted by user.", file=log_stream)
+            raise SystemExit(130) from None
+        finally:
+            if log_stream is not None:
+                log_stream.close()
+        raise SystemExit(0)
     except KeyboardInterrupt:
         print("\nProgram interrupted by user.", file=output_stream)
         raise SystemExit(130) from None
