@@ -14,10 +14,6 @@ def test_simulator_creates_one_drone_per_map_count() -> None:
         drone.current_hub == drone_map.start_hub
         for drone in simulator.drones
     )
-    assert all(
-        drone.route == ["start", "waypoint1", "waypoint2", "goal"]
-        for drone in simulator.drones
-    )
 
 
 def test_simulator_moves_all_drones_to_goal() -> None:

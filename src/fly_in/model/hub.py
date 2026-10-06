@@ -1,5 +1,5 @@
-from fly_in.header.header import ZoneType
 from pydantic import BaseModel, Field
+from fly_in.model.zone import ZoneType
 
 
 class Hub(BaseModel):
