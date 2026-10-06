@@ -60,8 +60,6 @@ For debugger use:
 make debug
 ```
 
-The detailed architecture and implementation rationale are documented in
-[`docs/explanation.md`](docs/explanation.md).
 
 The program also exposes a testable `run_cli()` function. It accepts injected
 input and output streams, so tests do not need to control a real terminal.
