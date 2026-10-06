@@ -59,11 +59,6 @@ For debugger use:
 ```bash
 make debug
 ```
-
-
-The program also exposes a testable `run_cli()` function. It accepts injected
-input and output streams, so tests do not need to control a real terminal.
-
 ## Algorithm and implementation
 
 The parser converts map directives into typed hubs, connections, and map
