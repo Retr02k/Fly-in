@@ -61,7 +61,7 @@ make debug
 ```
 
 The detailed architecture and implementation rationale are documented in
-[`explanation.md`](explanation.md).
+[`docs/explanation.md`](docs/explanation.md).
 
 The program also exposes a testable `run_cli()` function. It accepts injected
 input and output streams, so tests do not need to control a real terminal.
@@ -133,17 +133,17 @@ restricted transits, throughput, and route-cache hits and misses.
 Select `src/maps/easy/01_linear_path.txt` and choose a complete run:
 
 ```text
+Turn 0 | start -> goal
 Turn 1 movement events:
-  D1 departed start towards waypoint1 (arrival next turn).
+  D1 moved start -> waypoint1 (arrived this turn).
 Turn 2 movement events:
-  D1 arrived at waypoint1 (from start).
-  D1 departed waypoint1 towards waypoint2 (arrival next turn).
-  D2 departed start towards waypoint1 (arrival next turn).
+  D1 moved waypoint1 -> waypoint2 (arrived this turn).
+  D2 moved start -> waypoint1 (arrived this turn).
 ...
-Delivered 2 drones in 5 turns.
+Delivered 2 drones in 4 turns.
 
 Simulation statistics
-  Turns: 5
+  Turns: 4
   Total movement events: 8
 ```
 

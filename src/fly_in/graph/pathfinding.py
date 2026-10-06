@@ -1,7 +1,7 @@
 import heapq
-from fly_in.header.header import ZoneType
 from fly_in.model.hub import Hub
 from fly_in.model.map import Map
+from fly_in.model.zone import ZoneType
 
 
 ZONE_COST = {

@@ -1,11 +1,11 @@
 from fly_in.graph.builder import GraphBuilder
 from fly_in.graph.pathfinding import GraphTraversal, ZONE_COST
-from fly_in.header.header import ZoneType
 from fly_in.model.drone import Drone, DroneStatus
 from fly_in.model.map import Map
 from fly_in.model.movement import PlannedMove
 from fly_in.model.report import SimulationStats
 from fly_in.model.transit import TransitState
+from fly_in.model.zone import ZoneType
 
 
 class Simulator:
@@ -57,13 +57,6 @@ class Simulator:
         self._route_cache[cache_key] = tuple(route)
         return route
 
-    def _path_cost(self, route: list[str]) -> int:
-        """Calculate the weighted cost of a route."""
-        return sum(
-            ZONE_COST[self.parsed_map.hubs[hub_name].zone_type]
-            for hub_name in route[1:]
-        )
-
     @staticmethod
     def _link_key(origin: str, destination: str) -> tuple[str, str]:
         """Return a canonical key for an undirected connection."""
@@ -95,7 +88,6 @@ class Simulator:
             Drone(
                 drone_id=drone_id,
                 current_hub=self.route[0],
-                route=self.route.copy(),
                 status=(
                     DroneStatus.DELIVERED
                     if len(self.route) == 1
@@ -198,14 +190,11 @@ class Simulator:
         arrivals: list[tuple[int, str, str]] = []
         for move in planned_moves:
             drone = move.drone
-            drone.route = self._find_route(move.origin_hub)
-            drone.current_route_index = 0
             self.stats.path_costs[drone.drone_id] += ZONE_COST[
                 self.parsed_map.hubs[move.destination_hub].zone_type
             ]
             if move.duration == 1:
                 drone.current_hub = move.destination_hub
-                drone.current_route_index += 1
                 drone.status = (
                     DroneStatus.DELIVERED
                     if drone.current_hub == self.parsed_map.end_hub
@@ -246,7 +235,6 @@ class Simulator:
 
             previous_hub = drone.current_hub
             drone.current_hub = drone.transit.destination_hub
-            drone.current_route_index += 1
             drone.status = (
                 DroneStatus.DELIVERED
                 if drone.current_hub == self.parsed_map.end_hub
