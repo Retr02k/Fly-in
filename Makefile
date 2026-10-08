@@ -1,4 +1,3 @@
-ENV_UV := .venv/bin/uv
 REMOVE := rm -fr
 MYPY_FLAGS := --warn-return-any --warn-unused-ignores\
 			  --ignore-missing-imports --disallow-untyped-defs\
