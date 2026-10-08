@@ -59,6 +59,10 @@ For debugger use:
 ```bash
 make debug
 ```
+
+The `clean` target removes the local virtual environment and Python cache
+directories. Run `make install` again afterward to recreate the environment.
+
 ## Algorithm and implementation
 
 The parser converts map directives into typed hubs, connections, and map
