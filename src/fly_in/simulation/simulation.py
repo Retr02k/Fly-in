@@ -97,7 +97,10 @@ class Simulator:
             for drone_id in range(1, self.parsed_map.nb_drones + 1)
         ]
 
-    def _plan_allowed_moves(self) -> list[PlannedMove]:
+    def _plan_allowed_moves(
+        self,
+        blocked_drone_ids: set[int] | None = None,
+    ) -> list[PlannedMove]:
         """Plan legal moves without mutating drone state.
 
         Returns:
@@ -105,9 +108,7 @@ class Simulator:
         """
         occupancy = {
             hub_name: sum(
-                drone.status not in (
-                    DroneStatus.DELIVERED,
-                )
+                drone.status == DroneStatus.WAITING
                 and drone.current_hub == hub_name
                 for drone in self.drones
             )
@@ -132,7 +133,13 @@ class Simulator:
         planned: list[PlannedMove] = []
 
         for drone in sorted(self.drones, key=lambda item: item.drone_id):
-            if drone.status != DroneStatus.WAITING:
+            if (
+                drone.status != DroneStatus.WAITING
+                or (
+                    blocked_drone_ids is not None
+                    and drone.drone_id in blocked_drone_ids
+                )
+            ):
                 continue
 
             route = self._find_route(drone.current_hub)
@@ -260,8 +267,22 @@ class Simulator:
         Raises:
             RuntimeError: If no active or planned movement can continue.
         """
+        moving_drone_ids = {
+            drone.drone_id
+            for drone in self.drones
+            if drone.status == DroneStatus.MOVING
+        }
         movements = self._progress_transit()
-        planned_moves = self._plan_allowed_moves()
+        restricted_arrivals = {
+            drone_id
+            for drone_id in moving_drone_ids
+            if next(
+                drone.drone_id == drone_id
+                and drone.status != DroneStatus.MOVING
+                for drone in self.drones
+            )
+        }
+        planned_moves = self._plan_allowed_moves(restricted_arrivals)
         movements.extend(self._apply_planned_moves(planned_moves))
         self.last_arrivals = movements
         self.last_planned_moves = planned_moves

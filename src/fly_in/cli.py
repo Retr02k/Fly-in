@@ -8,7 +8,7 @@ from fly_in.errors.custom_errors import MapParseError
 
 
 _ANSI_COLORS = {
-    "black": 30, "red": 31, "green": 32, "yellow": 33,
+    "black": 30, "red": 31, "green": 32, "yellow": 93,
     "blue": 34, "purple": 35, "cyan": 36, "white": 37,
     "orange": 33, "brown": 33,
 }
@@ -40,7 +40,7 @@ def _render_map(simulator: Simulator, stream: TextIO, color: bool) -> None:
         drones = [
             str(drone.drone_id)
             for drone in simulator.drones
-            if drone.status != DroneStatus.DELIVERED
+            if drone.status == DroneStatus.WAITING
             and drone.current_hub == hub_name
         ]
         marker = "*" if hub_name in (
@@ -51,39 +51,63 @@ def _render_map(simulator: Simulator, stream: TextIO, color: bool) -> None:
         if color and ansi_color is not None:
             label = f"\033[{ansi_color}m{label}\033[0m"
         print(f"  {label}: {', '.join(drones) or '-'}", file=stream)
+    active_connections: dict[
+        tuple[str, str],
+        tuple[str, str, list[int]],
+    ] = {}
     for drone in simulator.drones:
-        if drone.status == DroneStatus.MOVING and drone.transit is not None:
+        if drone.status != DroneStatus.MOVING or drone.transit is None:
+            continue
+        origin, destination = drone.transit.connection
+        connection_key = (
+            (origin, destination)
+            if origin <= destination
+            else (destination, origin)
+        )
+        if connection_key not in active_connections:
+            active_connections[connection_key] = (
+                drone.transit.connection[0],
+                drone.transit.connection[1],
+                [],
+            )
+        active_connections[connection_key][2].append(drone.drone_id)
+    if active_connections:
+        print("  Connections:", file=stream)
+        for connection in sorted(active_connections):
+            origin, destination, drone_ids = active_connections[connection]
+            ids = ", ".join(f"D{drone_id}" for drone_id in sorted(drone_ids))
             print(
-                f"  D{drone.drone_id}-"
-                f"{_connection_label(*drone.transit.connection)}",
+                f"    {_connection_label(origin, destination)}: {ids}",
                 file=stream,
             )
 
 
 def _turn_output(simulator: Simulator) -> str:
-    """Describe arrivals and departures from the latest turn."""
-    lines = [f"\nTurn {simulator.current_turn} movement events:"]
-    for drone_id, origin, destination in simulator.last_arrivals:
-        lines.append(
-            f"  D{drone_id} arrived at {destination} "
-            f"(from {origin})."
-        )
+    """Format the latest turn using the subject's movement notation.
+
+    Normal and priority moves are represented by their destination hub.
+    Restricted moves are represented by the occupied connection while the
+    drone is in transit. Restricted arrivals are represented by their
+    destination hub.
+    """
+    normal_arrivals = {
+        (move.drone.drone_id, move.destination_hub)
+        for move in simulator.last_planned_moves
+        if move.duration == 1
+    }
+    tokens = [
+        f"D{drone_id}-{destination}"
+        for drone_id, _, destination in simulator.last_arrivals
+        if (drone_id, destination) not in normal_arrivals
+    ]
     for move in simulator.last_planned_moves:
-        if move.duration > 1:
-            lines.append(
-                f"  D{move.drone.drone_id} departed {move.origin_hub} "
-                f"towards {move.destination_hub}; "
-                f"in transit on {_connection_label(*move.connection)} "
-                f"({move.duration} turns)."
-            )
-        else:
-            lines.append(
-                f"  D{move.drone.drone_id} moved {move.origin_hub} "
-                f"-> {move.destination_hub} (arrived this turn)."
-            )
-    if len(lines) == 1:
-        lines.append("  No drone movement.")
-    return "\n".join(lines)
+        target = (
+            _connection_label(*move.connection)
+            if move.duration > 1
+            else move.destination_hub
+        )
+        tokens.append(f"\nD{move.drone.drone_id}-{target}")
+    return " ".join(tokens)
 
 
 def _print_stats(simulator: Simulator, stream: TextIO) -> None:

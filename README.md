@@ -4,10 +4,10 @@
 
 ## Description
 
-Fly-in is a Python simulation of drones travelling through a directed-looking
-map of bidirectional hub connections. Drones must move from one start hub to
-one goal hub while respecting hub capacity, connection capacity, weighted zone
-costs, restricted-zone transit, simultaneous movement, and deadlock rules.
+Fly-in is a Python simulation of drones travelling through a map of
+bidirectional hub connections. Drones must move from one start hub to one goal
+hub while respecting hub capacity, connection capacity, weighted zone costs,
+restricted-zone transit, simultaneous movement, and deadlock rules.
 
 The project deliberately uses no graph library. Parsing, validation, routing,
 simulation, terminal rendering, logging, and tests are implemented in Python
@@ -83,7 +83,9 @@ Each simulation turn has separate phases:
 Restricted movement occupies its connection for two turns and reserves the
 destination before departure. The simulator keeps physical hub occupancy,
 destination reservations, and shared bidirectional connection usage distinct.
-Active transit is valid progress, so it cannot be mistaken for a deadlock.
+When restricted transit completes, the drone remains at its destination until
+the next turn before it can move again. Active transit is valid progress, so it
+cannot be mistaken for a deadlock.
 
 Routes are cached by origin and destination. The cache stores immutable tuples,
 while capacity checks remain dynamic and are performed every turn.
@@ -115,11 +117,12 @@ integers, not only non-negative integers.
 
 ## Visual representation
 
-The standard-library TUI displays the current turn, start and goal, each hub's
+The terminal interface displays the current turn, start and goal, each hub's
 coordinates-derived ordering, zone type, and drones currently at that hub.
-Restricted drones are shown on their active connection. Step mode pauses after
-each rendered turn so the movement can be inspected. ANSI colors are enabled
-when the output is a terminal and are omitted from redirected output.
+Restricted drones are shown separately under their active connection rather
+than at their departure hub. Step mode pauses after each rendered turn so the
+movement can be inspected. ANSI colors are enabled when the output is a
+terminal and are omitted from redirected output.
 
 After delivery, the program reports total turns, movement events, average
 turns per drone, total and average weighted path cost, waiting turns,
@@ -131,23 +134,27 @@ Select `src/maps/easy/01_linear_path.txt` and choose a complete run:
 
 ```text
 Turn 0 | start -> goal
-Turn 1 movement events:
-  D1 moved start -> waypoint1 (arrived this turn).
-Turn 2 movement events:
-  D1 moved waypoint1 -> waypoint2 (arrived this turn).
-  D2 moved start -> waypoint1 (arrived this turn).
+D1-waypoint1
+Turn 1 | start -> goal
+D1-waypoint2 D2-waypoint1
+Turn 2 | start -> goal
+D1-goal D2-waypoint2
+Turn 3 | start -> goal
+D2-goal
+Turn 4 | start -> goal
 ...
 Delivered 2 drones in 4 turns.
 
 Simulation statistics
   Turns: 4
-  Total movement events: 8
+  Total movement events: 6
 ```
 
-Movement output explicitly distinguishes departures, completed arrivals, and
-restricted drones in transit on a connection. The hub snapshot below each
-turn shows where drones are physically located; a drone listed as in transit
-is not physically occupying either endpoint hub.
+Each simulation turn emits a space-separated movement line using the subject's
+format: normal and priority moves use the destination zone, while restricted
+movement uses the occupied connection (for example, `D1-start-gate`). The hub
+snapshot below each turn shows where drones are physically located; a drone
+listed as in transit is not physically occupying either endpoint hub.
 
 ## Resources
 
