@@ -106,7 +106,7 @@ def _turn_output(simulator: Simulator) -> str:
             if move.duration > 1
             else move.destination_hub
         )
-        tokens.append(f"\nD{move.drone.drone_id}-{target}")
+        tokens.append(f"D{move.drone.drone_id}-{target}")
     return " ".join(tokens)
 
 
