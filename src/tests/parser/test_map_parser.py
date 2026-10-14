@@ -37,6 +37,24 @@ def test_parse_ignores_comments_and_blank_lines(
     assert result is not None
 
 
+def test_parse_ignores_inline_comments(tmp_path: Path) -> None:
+    map_path = tmp_path / "inline-comment.map"
+    map_path.write_text(
+        "# Full-line comment\n"
+        "nb_drones: 1 # Inline comment\n"
+        "start_hub: start 0 0 # Inline comment\n"
+        "end_hub: goal 1 0\n"
+        "connection: start-goal # Inline comment\n"
+    )
+
+    result = MapParser(filepath=str(map_path)).parse()
+
+    assert result.nb_drones == 1
+    assert result.start_hub == "start"
+    assert result.end_hub == "goal"
+    assert len(result.connections) == 1
+
+
 def test_parse_raises_on_unknown_directive(tmp_path: Path) -> None:
     bad_path = tmp_path / "bad.map"
     bad_path.write_text("mystery_field: something\n")

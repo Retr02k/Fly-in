@@ -69,8 +69,9 @@ def test_restricted_arrival_frees_connection_before_new_planning() -> None:
     arrivals = simulator.step()
 
     assert (1, "start", "gate") in arrivals
-    assert simulator.drones[1].transit is not None
-    assert simulator.drones[1].transit.destination_hub == "gate"
+    assert simulator.drones[0].current_hub == "gate"
+    assert simulator.drones[0].status.value == "waiting"
+    assert simulator.drones[1].transit is None
 
 
 def test_simulator_respects_link_capacity() -> None:
@@ -119,10 +120,9 @@ def test_circular_loop_preserves_restricted_link_capacity() -> None:
             if move.destination_hub == "exit_point"
         )
 
-    # Two normal moves are required before the first departure. The
-    # capacity-one restricted link remains occupied for two turns.
-    assert restricted_departures == [3, 4, 5, 6, 7, 8]
-    assert simulator.current_turn == 9
+    # Restricted arrivals wait at their destination until the next turn.
+    assert restricted_departures == [3, 5, 6, 7, 8, 9]
+    assert simulator.current_turn == 10
 
 
 def test_edge_case_map_waits_until_capacity_is_available() -> None:
@@ -132,7 +132,7 @@ def test_edge_case_map_waits_until_capacity_is_available() -> None:
 
     simulator = Simulator(drone_map)
 
-    assert len(simulator.run()) == 5
+    assert len(simulator.run()) == 6
     assert all(
         drone.current_hub == drone_map.end_hub
         for drone in simulator.drones
