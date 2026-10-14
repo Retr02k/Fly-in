@@ -40,7 +40,7 @@ def _render_map(simulator: Simulator, stream: TextIO, color: bool) -> None:
         drones = [
             str(drone.drone_id)
             for drone in simulator.drones
-            if drone.status != DroneStatus.DELIVERED
+            if drone.status == DroneStatus.WAITING
             and drone.current_hub == hub_name
         ]
         marker = "*" if hub_name in (
@@ -51,11 +51,33 @@ def _render_map(simulator: Simulator, stream: TextIO, color: bool) -> None:
         if color and ansi_color is not None:
             label = f"\033[{ansi_color}m{label}\033[0m"
         print(f"  {label}: {', '.join(drones) or '-'}", file=stream)
+    active_connections: dict[
+        tuple[str, str],
+        tuple[str, str, list[int]],
+    ] = {}
     for drone in simulator.drones:
-        if drone.status == DroneStatus.MOVING and drone.transit is not None:
+        if drone.status != DroneStatus.MOVING or drone.transit is None:
+            continue
+        origin, destination = drone.transit.connection
+        connection_key = (
+            (origin, destination)
+            if origin <= destination
+            else (destination, origin)
+        )
+        if connection_key not in active_connections:
+            active_connections[connection_key] = (
+                drone.transit.connection[0],
+                drone.transit.connection[1],
+                [],
+            )
+        active_connections[connection_key][2].append(drone.drone_id)
+    if active_connections:
+        print("  Connections:", file=stream)
+        for connection in sorted(active_connections):
+            origin, destination, drone_ids = active_connections[connection]
+            ids = ", ".join(f"D{drone_id}" for drone_id in sorted(drone_ids))
             print(
-                f"  D{drone.drone_id}-"
-                f"{_connection_label(*drone.transit.connection)}",
+                f"    {_connection_label(origin, destination)}: {ids}",
                 file=stream,
             )
 
@@ -84,7 +106,7 @@ def _turn_output(simulator: Simulator) -> str:
             if move.duration > 1
             else move.destination_hub
         )
-        tokens.append(f"D{move.drone.drone_id}-{target}")
+        tokens.append(f"\nD{move.drone.drone_id}-{target}")
     return " ".join(tokens)
 
 

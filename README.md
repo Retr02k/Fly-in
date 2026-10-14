@@ -119,9 +119,10 @@ integers, not only non-negative integers.
 
 The terminal interface displays the current turn, start and goal, each hub's
 coordinates-derived ordering, zone type, and drones currently at that hub.
-Restricted drones are shown on their active connection. Step mode pauses after
-each rendered turn so the movement can be inspected. ANSI colors are enabled
-when the output is a terminal and are omitted from redirected output.
+Restricted drones are shown separately under their active connection rather
+than at their departure hub. Step mode pauses after each rendered turn so the
+movement can be inspected. ANSI colors are enabled when the output is a
+terminal and are omitted from redirected output.
 
 After delivery, the program reports total turns, movement events, average
 turns per drone, total and average weighted path cost, waiting turns,
