@@ -7,7 +7,10 @@ import pytest
 
 import fly_in.cli as cli
 from fly_in.cli import _choose_map
+from fly_in.cli import _render_map
 from fly_in.model.drone import DroneStatus
+from fly_in.parser import MapParser
+from fly_in.simulation import Simulator
 
 
 def test_cli_runs_map_and_reports_delivery(
@@ -73,6 +76,22 @@ def test_custom_map_selection_prompts_for_path() -> None:
 
     assert selected == "src/maps/easy/01_linear_path.txt"
     assert "Enter the path to the map file:" in output.getvalue()
+
+
+def test_render_map_shows_transit_separately_from_hubs() -> None:
+    simulator = Simulator(
+        MapParser(filepath="src/maps/test_edge_cases.txt").parse()
+    )
+    simulator.step()
+    output = StringIO()
+
+    _render_map(simulator, output, color=False)
+
+    rendered = output.getvalue()
+    assert "*start [normal]: 2, 3" in rendered
+    assert "Connections:" in rendered
+    assert "start-gate: D1" in rendered
+    assert "*start [normal]: 1, 2, 3" not in rendered
 
 
 def test_log_path_cannot_escape_output_directory(

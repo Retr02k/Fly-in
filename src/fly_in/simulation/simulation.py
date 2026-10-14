@@ -108,9 +108,7 @@ class Simulator:
         """
         occupancy = {
             hub_name: sum(
-                drone.status not in (
-                    DroneStatus.DELIVERED,
-                )
+                drone.status == DroneStatus.WAITING
                 and drone.current_hub == hub_name
                 for drone in self.drones
             )
