@@ -51,6 +51,8 @@ class MapParser(BaseModel):
                 line = raw_line.strip()
                 if not line or line.startswith("#"):
                     continue
+                if "#" in line:
+                    line = line.split("#")[0]
                 builder.current_line = line_number
 
                 key, _, value = line.partition(":")

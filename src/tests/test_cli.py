@@ -29,9 +29,10 @@ def test_cli_runs_map_and_reports_delivery(
 
     rendered = output.getvalue()
     assert error.value.code == 0
-    assert "Turn 1 movement events:" in rendered
-    assert "D1 moved start -> waypoint1 (arrived this turn)." in rendered
-    assert "D1 arrived at goal" in rendered
+    assert "D1-waypoint1\nTurn 1" in rendered
+    assert "D1-waypoint2 D2-waypoint1" in rendered
+    assert "D1-goal D2-waypoint2" in rendered
+    assert "D2-goal\nTurn 4" in rendered
     assert "Delivered 2 drones" in rendered
     assert "Simulation statistics" in rendered
 
